@@ -1,0 +1,27 @@
+# Hanzo Cloud build/deploy manifest — hanzo-apps/inventory-stockroom
+#
+# A forked app is a STATIC SPA: Vite builds `dist/`, Hanzo Cloud serves it at
+# `<slug>.hanzo.app` from the project's object-storage prefix (the `*.hanzo.app`
+# published-sites edge). There is no server process — identity + data are done
+# in the browser (Hanzo IAM PKCE -> IAM token -> Hanzo Base).
+build:
+  runtime: static
+  install: npm ci
+  command: npm run build
+  output: dist
+  # Serve index.html for client routes (the /auth/callback PKCE return leg).
+  spa: true
+
+# The Base data plane provisioned on publish. Hanzo Cloud reads this DDL and
+# runs `provisionBaseFromDDL` (creates the collections, org-scoped, IAM-native).
+data:
+  base: true
+  schema: schema.sql
+
+# Injected into the build as import.meta.env.* (see .env.example / README).
+# The deploy pipeline overrides VITE_HANZO_BASE_URL with the provisioned URL and
+# ensures VITE_HANZO_CLIENT_ID's IAM client allows this origin's /auth/callback.
+env:
+  VITE_HANZO_IAM_URL: https://hanzo.id
+  VITE_HANZO_CLIENT_ID: hanzo-app
+  VITE_HANZO_BASE_URL: https://api.hanzo.ai
